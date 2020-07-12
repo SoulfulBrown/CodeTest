@@ -11,8 +11,8 @@ namespace CakeApp
         public CakeList cakeList { get; private set; }
         [SerializeField]
         GameObject cakeListEntryPrefab;
-        [SerializeField]
-        GameObject CakeObjectPrefab;
+       // [SerializeField]
+        //GameObject CakeObjectPrefab;
         [SerializeField]
         Transform content;
         List<GameObject> listEntries;

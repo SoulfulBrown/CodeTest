@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -7,9 +8,17 @@ using UnityEngine.XR.ARSubsystems;
 [RequireComponent(typeof(ARRaycastManager))]
 public class ARCakePlacer : MonoBehaviour
 {
-    [SerializeField]
+
     [Tooltip("Instantiates this prefab on a plane at the touch location.")]
+    public GameObject CakeObjectPrefab;
+
+    [SerializeField]
+    [Tooltip("The instance of the cake in the scene")]
     GameObject m_PlacedPrefab;
+    static List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
+
+
+    ARRaycastManager m_RaycastManager;
 
     /// <summary>
     /// The prefab to instantiate on touch.
@@ -32,9 +41,12 @@ public class ARCakePlacer : MonoBehaviour
 
     bool TryGetTouchPosition(out Vector2 touchPosition)
     {
+
+
 #if UNITY_EDITOR
         if (Input.GetMouseButton(0))
         {
+
             var mousePosition = Input.mousePosition;
             touchPosition = new Vector2(mousePosition.x, mousePosition.y);
             return true;
@@ -53,27 +65,32 @@ public class ARCakePlacer : MonoBehaviour
 
     void Update()
     {
+
+        //check to see if the mouse has been clicked that frame
+        //if false terminates, if true updates touch position to last mouse place 
         if (!TryGetTouchPosition(out Vector2 touchPosition))
             return;
 
-        if (m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.PlaneWithinPolygon))
+
+        //creates a raycast
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(touchPosition);
+        if (Physics.Raycast(ray, out hit, 500))
         {
-            // Raycast hits are sorted by distance, so the first one
-            // will be the closest hit.
-            var hitPose = s_Hits[0].pose;
+            Debug.DrawRay(ray.origin, ray.direction * 100, Color.red, 100, true);
+            Debug.Log(hit.point);
 
-            if (spawnedObject == null)
-            {
-                spawnedObject = Instantiate(m_PlacedPrefab, hitPose.position, hitPose.rotation);
-            }
-            else
-            {
-                spawnedObject.transform.position = hitPose.position;
-            }
         }
+
+        //if the object has already been placed, dont call
+        if (m_PlacedPrefab == null && hit.point != null)
+        {
+            m_PlacedPrefab = Instantiate(CakeObjectPrefab, hit.point, Quaternion.identity);
+        }
+        else
+        {   // updates the position if a new point has been made
+            m_PlacedPrefab.transform.position = hit.point;
+        }
+
     }
-
-    static List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
-
-    ARRaycastManager m_RaycastManager;
 }
